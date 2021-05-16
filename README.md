@@ -1,5 +1,7 @@
 # Multi-Client-Chat-Application-GUI
-A JAVA GUI Chat Application made using Eclipse IDE that uses Socket Programming to connect multiple clients to a single host located at "localhost" and allowS them to chat both altogether and privately with each other. The concepts used include Java Socket Programming, Java multi-threading and Java Swing.
+A JAVA GUI Chat Application made using Eclipse IDE that uses Socket Programming to connect multiple clients to a single host located at "localhost" and allows them to chat both altogether and privately with each other.
+
+The concepts used include Java Socket Programming, Java multi-threading and Java Swing.
 ## Installation
 - Download both the [**Server.jar**](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/raw/main/Server.jar) and [**Client.jar**](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/raw/main/Client.jar) and put them in the same folder.
 ## Run
