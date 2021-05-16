@@ -11,5 +11,12 @@ In case it is not working, or the **.jar** file is not recognised even after ins
 - Download [these](https://www.dropbox.com/sh/yf3hqnhgb4u0d5y/AABw9qD-7ucCr7Lrv5Yc2cLSa?dl=0) files and keep them in the same folder.
 - Double-Click on **Server.bat**.
 - Now for every Client Double-Click on **Client.bat**.
+## Screenshots
+![Chandler](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/blob/main/Images/Chandler.png)
+![Joey](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/blob/main/Images/Joey.png)
+![Ross](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/blob/main/Images/Ross.png)
+![Rachel](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/blob/main/Images/Rachel.png)
+![Phoebe](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/blob/main/Images/Phoebe.png)
+![Monica](https://github.com/misraVaibhav/Multi-Client-Chat-Application-GUI/blob/main/Images/Monica.png)
 
 Enjoy!
