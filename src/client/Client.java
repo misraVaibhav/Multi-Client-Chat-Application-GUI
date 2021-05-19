@@ -14,6 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 import objects.Message;
 import objects.MessageType;
@@ -47,7 +48,7 @@ public class Client {
 	 * connect to the server, store input/output streams and setup GUI for client interaction 
 	 */
 	Client() {		
-		
+					
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -64,12 +65,31 @@ public class Client {
 	 * connect to the server through the port saved by the server in port.txt
 	 */
 	private void startConnection() throws UnknownHostException, IOException {
+		String str = "";
+		String message = "Enter Host name of the server machine :";
+		while(str.isEmpty()) {
+			str = (String)JOptionPane.showInputDialog(frame, message, InetAddress.getLocalHost().getHostName());
+			if(str == null) System.exit(0);
+			message = "Host name cannot be empty!\nEnter Host name of the server machine:";
+		}
+		str = str.trim();
+		server = str;
 		System.out.println("Connecting to server...");
-		FileReader fr = new FileReader(new File("port.txt"));
-		BufferedReader br = new BufferedReader(fr);
-		socket = new Socket("localhost",Integer.parseInt(br.readLine()));
-		fr.close();
-		System.out.println("Connected");
+		message = "Using port number 50000\nTo connect to a different port, type the port number:\n";
+		String str_ = (String)JOptionPane.showInputDialog(frame, message, "50000");
+		if(str_ == null) System.exit(0);
+		str_ = str_.trim();
+		pNumber = Integer.parseInt(str_);
+		new SwingWorker<Object, Object>() {
+
+			@Override
+			protected Object doInBackground() throws Exception {
+				socket = new Socket(server, pNumber);
+				System.out.println("Connected");
+				return null;
+			}
+			
+		}.execute();
 	}
 	
 	/*
@@ -90,16 +110,31 @@ public class Client {
 			message = "Name cannot be empty!\nEnter your name to enter the chat:";
 		}
 		this.name = str;
-		this.out = new ObjectOutputStream(socket.getOutputStream());
-		this.in = new ObjectInputStream(socket.getInputStream());
-		out.writeObject(new Message(str, MessageType.SEND_NAME));
-		out.flush();
+		System.out.println(socket == null);
+		new SwingWorker<Object, Object>() {
+
+			@Override
+			protected Object doInBackground() throws Exception {
+				Client.this.out = new ObjectOutputStream(socket.getOutputStream());
+				Client.this.in = new ObjectInputStream(socket.getInputStream());
+				out.writeObject(new Message(name, MessageType.SEND_NAME));
+				out.flush();
+				return null;
+			}
+			
+		}.execute();
+		
+		/*
+		 * start a helper thread that keeps on reading messages from server and also sets up private chatting GUI
+		 */
+		new Thread(new ClientHelper(this)).start();
 		
 		/*
 		 * set global chatting GUI
 		 */
-		frame.setTitle(str);
+		frame.setTitle("Connected to server at: " + socket.getRemoteSocketAddress().toString());
 		splitPane = new JSplitPane();
+		splitPane.setBorder(BorderFactory.createTitledBorder(str));
 		leftPanel = new JPanel();
 		rightPanel = new JPanel();
 		globalChat = new JScrollPane();
@@ -152,18 +187,24 @@ public class Client {
 		frame.add(splitPane);
 		frame.pack();
 		frame.setVisible(true);
+		System.out.println("visible");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		/*
-		 * start a helper thread that keeps on reading messages from server and also sets up private chatting GUI
-		 */
-		new Thread(new ClientHelper(this)).start();
 		
 		/*
 		 * request for client list from server initially to show online clients as the client joins chat
 		 */
-		out.writeObject(new Message());
-		out.flush();
+//		new SwingWorker<Object, Object>() {
+//
+//			@Override
+//			protected Object doInBackground() throws Exception {
+				
+				out.writeObject(new Message());
+				out.flush();
+//				return null;
+//			}
+//			
+//		}.execute();
+		
 	}
 	
 	/*
@@ -226,5 +267,6 @@ public class Client {
 	private JScrollPane messageArea;
 	private JTextArea messageText;
 	private JButton sendButton;
-//	private JLabel gLabel;
+	private int pNumber;
+	private String server;
 }
