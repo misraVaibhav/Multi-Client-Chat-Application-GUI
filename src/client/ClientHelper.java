@@ -3,7 +3,6 @@
  */
 package client;
 
-import java.net.*;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
@@ -55,107 +54,124 @@ public class ClientHelper implements Runnable{
 	 * the following method runs after the constructor's initialisation owing to the call to Thread's start method
 	 */
 	public void run() {
+		
+		/*
+		 * get all online users from server, asked before starting this thread
+		 */
+//		new SwingWorker<Object, Object>() {
+//
+//			@Override
+//			protected Object doInBackground() throws Exception {
 		try {
-			
-			/*
-			 * get all online users from server, asked before starting this thread
-			 */
-			Message message = (Message)Gui.getIn().readObject();
-			for(String name : message.getClients()) {
-				if(!name.equals(Gui.getName()))
-					chats.put(name, "");
-			}
-			
-			/*
-			 * set GUI for showing lists of online users the Event Dispatch Thread
-			 */
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					setChatsGUI();
+				Message message = (Message)Gui.getIn().readObject();
+				for(String name : message.getClients()) {
+					if(!name.equals(Gui.getName()))
+						chats.put(name, "");
 				}
-			});
-			
-			/*
-			 * keep listening for messages form server
-			 */
-			while(true) {
-				message = (Message)Gui.getIn().readObject();				
 				
-				if(message.getmType() == MessageType.SEND_CLIENT_LIST) {
-					/*
-					 * new client list is sent by server when any new client joins
-					 */
-					for(String name : message.getClients()) {
-						if(!chats.containsKey(name) && !name.equals(Gui.getName())) {
-							chats.put(name, "");
-						}
-					}
-					
-					
-					/*
-					 * if current private chat GUI is of type chat list, update the users
-					 */
-					if(chatWith == null) {
+				/*
+				 * set GUI for showing lists of online users the Event Dispatch Thread
+				 */
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
 						setChatsGUI();
 					}
-				} else if(message.getmType() == MessageType.SEND_CLIENT_LIST_LEFT) {
-//					if(chats.get(message.getMessage()).equals(""))
-						chats.remove(message.getMessage());
-					if(chatWith == null) {
-						setChatsGUI();
-					}
-				} else if(message.getmType() == MessageType.SERVER_PRIVATE_MESSAGE) {
-					/*
-					 * server sends a private message from one of the other clients
-					 */
-					if(chatWith != null && chatWith == message.getPerson()) {
+				});
+				
+				
+				/*
+				 * keep listening for messages form server
+				 */
+				while(true) {
+					message = (Message)Gui.getIn().readObject();				
+					
+					if(message.getmType() == MessageType.SEND_CLIENT_LIST) {
+						
 						/*
-						 * if currently chatting with the corresponding client only update the chat
+						 * new client list is sent by server when any new client joins
+						 */
+						for(String name : message.getClients()) {
+							if(!chats.containsKey(name) && !name.equals(Gui.getName())) {
+								chats.put(name, "");
+							}
+						}
+						
+						
+						/*
+						 * if current private chat GUI is of type chat list, update the users
+						 */
+						if(chatWith == null) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									setChatsGUI();
+								}
+							});
+						}
+					} else if(message.getmType() == MessageType.SEND_CLIENT_LIST_LEFT) {
+						chats.remove(message.getMessage());
+						if(chatWith == null) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									setChatsGUI();
+								}
+							});
+						}
+					} else if(message.getmType() == MessageType.SERVER_PRIVATE_MESSAGE) {
+						/*
+						 * server sends a private message from one of the other clients
+						 */
+						if(chatWith != null && chatWith == message.getPerson()) {
+							/*
+							 * if currently chatting with the corresponding client only update the chat
+							 */
+							final Message msg = message;
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									if(privateChatArea.getText().equals(""))
+										privateChatArea.setText(msg.getPerson() + " - " + "\n    " + msg.getMessage() + "\n\n");
+									else									
+										privateChatArea.setText(privateChatArea.getText() + msg.getPerson() + " - " + "\n    " +  msg.getMessage() + "\n");
+								}
+							});
+							
+						} else {
+							/*
+							 * if not currently chatting, store in the chats hashtable
+							 */
+							String pChat = chats.get(message.getPerson());
+							chats.put(message.getPerson(),pChat + message.getPerson() + " - " + "\n    " + message.getMessage() + "\n\n");
+							if(chatWith == null) {
+								SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										setChatsGUI();
+									}
+								});
+							}
+						}
+					} else if(message.getmType() == MessageType.SERVER_GLOBAL_MESSAGE) {
+						/*
+						 * server sends a global message from one of the clients
 						 */
 						final Message msg = message;
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								if(privateChatArea.getText().equals(""))
-									privateChatArea.setText(msg.getPerson() + " - " + "\n    " + msg.getMessage() + "\n\n");
-								else									
-									privateChatArea.setText(privateChatArea.getText() + msg.getPerson() + " - " + "\n    " +  msg.getMessage() + "\n");
+								if((Gui.getGlobalChatArea().getText().equals("")))
+										Gui.getGlobalChatArea().setText(msg.getPerson() + " - " + "\n    " + msg.getMessage() + "\n\n");
+								else
+									Gui.getGlobalChatArea().setText(Gui.getGlobalChatArea().getText() + msg.getPerson() + " - " + "\n    " + msg.getMessage() + "\n\n");
 							}
-						});
-						
+						});					
 					} else {
-						/*
-						 * if not currently chatting, store in the chats hashtable
-						 */
-						String pChat = chats.get(message.getPerson());
-						chats.put(message.getPerson(),pChat + message.getPerson() + " - " + "\n    " + message.getMessage() + "\n\n");
-						if(chatWith == null) {
-							setChatsGUI();
-						}
+						System.out.println("Error Occured");
 					}
-				} else if(message.getmType() == MessageType.SERVER_GLOBAL_MESSAGE) {
-					/*
-					 * server sends a global message from one of the clients
-					 */
-					final Message msg = message;
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							if((Gui.getGlobalChatArea().getText().equals("")))
-									Gui.getGlobalChatArea().setText(msg.getPerson() + " - " + "\n    " + msg.getMessage() + "\n\n");
-							else
-								Gui.getGlobalChatArea().setText(Gui.getGlobalChatArea().getText() + msg.getPerson() + " - " + "\n    " + msg.getMessage() + "\n\n");
-						}
-					});					
-				} else {
-					System.out.println("Error Occured");
 				}
-			}
-		} catch (SocketException se) {
-			System.out.println("Error establishing connection: " + se.getMessage());
-		} catch (IOException ioe) {
+//			}
+//		}.execute();
+		} catch(IOException ioe) {
 			System.out.println("Error establishing connection: " + ioe.getMessage());
 		} catch(ClassNotFoundException cnfe) {
 			System.out.println("Error establishing connection: " + cnfe.getMessage());
-		}	
+		}
 	}
 	
 	/*
@@ -223,7 +239,6 @@ public class ClientHelper implements Runnable{
 		Gui.getRightPanel().setBorder(BorderFactory.createTitledBorder("Private Chat"));
 
 		chatWith = name;
-//		chatWith.setHorizontalAlignment(JLabel.RIGHT);
 		privateChatArea = new JTextArea();
 		privateChatArea.setEditable(false);
 		privateChatArea.setFont(privateChatArea.getFont().deriveFont(18f));
